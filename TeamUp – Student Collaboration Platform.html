@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TeamUp – Student Collaboration Platform</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--mut:#667085;--bd:#e3e6ee;--pri:#4f46e5;--pri-t:#eef0ff;--ok:#12805c;--ok-t:#e1f6ee;--hi:#fff3cd;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--card:#1b1e29;--tx:#eceef5;--mut:#9aa1b4;--bd:#2b3042;--pri:#8b85ff;--pri-t:#262a4a;--ok:#4cd6a0;--ok-t:#16322a;--hi:#4a3d12}}
+:root[data-theme="dark"]{--bg:#12141c;--card:#1b1e29;--tx:#eceef5;--mut:#9aa1b4;--bd:#2b3042;--pri:#8b85ff;--pri-t:#262a4a;--ok:#4cd6a0;--ok-t:#16322a;--hi:#4a3d12}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+h1{font-size:22px;margin:0}h1 span{color:var(--pri)}
+.sub{color:var(--mut);margin:0 0 18px}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:18px}
+@media(max-width:780px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px}
+.panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 8px}
+.panel+.panel{margin-top:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--bd);background:transparent;color:var(--tx);border-radius:999px;padding:4px 11px;font:inherit;font-size:13px;cursor:pointer}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.tag{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--bd);color:var(--tx)}
+.tag.m{background:var(--ok-t);color:var(--ok);font-weight:600}
+input[type=search]{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;margin-bottom:12px}
+.list{display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:start}
+.av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700}
+.name{font-weight:650}.meta{color:var(--mut);font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.score{text-align:center;min-width:64px}
+.score b{display:block;font-size:22px;color:var(--pri)}
+.score small{color:var(--mut);font-size:11px}
+.btn{margin-top:8px;border:0;border-radius:9px;padding:7px 12px;background:var(--pri);color:#fff;font:inherit;font-size:13px;cursor:pointer}
+.btn.d{background:var(--ok-t);color:var(--ok)}
+.btn.g{background:transparent;border:1px solid var(--bd);color:var(--tx)}
+.team{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:4px 0}
+.team button{background:none;border:0;color:var(--mut);cursor:pointer;font-size:16px}
+.empty{color:var(--mut);font-size:14px}
+@media(max-width:480px){.card{grid-template-columns:40px 1fr}.score{grid-column:2;text-align:left;display:flex;gap:6px;align-items:baseline}.av{width:40px;height:40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>Team<span>Up</span></h1><button class="btn g" id="ctx" style="margin:0">Project: Hackathon</button></header>
+<p class="sub">Describe the project you're building and find classmates with the skills you need and interests you share.</p>
+<div class="grid">
+<aside>
+<div class="panel"><h2>Skills I need</h2><div class="chips" id="needs"></div></div>
+<div class="panel"><h2>My interests</h2><div class="chips" id="ints"></div></div>
+<div class="panel"><h2>Availability</h2><div class="chips" id="avail"></div></div>
+<div class="panel"><h2>My shortlist (<span id="cnt">0</span>/4)</h2><div id="team"><p class="empty">Invite students to build your team.</p></div></div>
+</aside>
+<main>
+<input type="search" id="q" placeholder="Search by name, major or skill…" aria-label="Search">
+<div class="list" id="list"></div>
+</main>
+</div>
+</div>
+<script>
+const SKILLS=["Python","React","UI/UX","Data Analysis","Machine Learning","Writing","Marketing","Electronics","Public Speaking","Java"];
+const INTERESTS=["Healthtech","EdTech","Climate","Fintech","Gaming","Social Impact"];
+const AVAIL=["Weekdays","Evenings","Weekends"];
+const S=[
+{n:"Aarav Mehta",m:"CS, Year 3",s:["Python","Machine Learning","Data Analysis"],i:["Healthtech","Climate"],a:["Evenings","Weekends"]},
+{n:"Priya Nair",m:"Design, Year 2",s:["UI/UX","Marketing","Writing"],i:["EdTech","Social Impact"],a:["Weekdays","Weekends"]},
+{n:"Rohan Das",m:"ECE, Year 4",s:["Electronics","Python","Java"],i:["Climate","Gaming"],a:["Weekdays"]},
+{n:"Sana Khan",m:"Business, Year 3",s:["Marketing","Public Speaking","Data Analysis"],i:["Fintech","Social Impact"],a:["Evenings"]},
+{n:"Karthik Reddy",m:"CS, Year 2",s:["React","Java","UI/UX"],i:["Gaming","EdTech"],a:["Weekdays","Evenings"]},
+{n:"Ananya Rao",m:"Stats, Year 4",s:["Data Analysis","Python","Writing"],i:["Healthtech","Fintech"],a:["Weekends"]},
+{n:"Imran Sheikh",m:"CS, Year 3",s:["React","Python","Machine Learning"],i:["Fintech","Healthtech"],a:["Evenings","Weekends"]},
+{n:"Meera Iyer",m:"Journalism, Year 2",s:["Writing","Public Speaking","Marketing"],i:["Social Impact","Climate"],a:["Weekdays","Weekends"]},
+{n:"Vikram Singh",m:"Mech Eng, Year 3",s:["Electronics","Python"],i:["Climate","Gaming"],a:["Weekends"]},
+{n:"Divya Patel",m:"HCI, Year 4",s:["UI/UX","React","Writing"],i:["EdTech","Healthtech"],a:["Weekdays","Evenings"]}];
+const COL=["#4f46e5","#0d9488","#c2410c","#be185d","#7c3aed","#0369a1"];
+const st={needs:new Set(),ints:new Set(),avail:new Set(),team:new Set(),q:""};
+function chips(id,arr,set){const el=document.getElementById(id);el.innerHTML="";
+arr.forEach(x=>{const b=document.createElement("button");b.className="chip";b.textContent=x;
+b.onclick=()=>{set.has(x)?set.delete(x):set.add(x);b.classList.toggle("on");render()};el.appendChild(b)})}
+function score(p){let n=st.needs.size,i=st.ints.size;
+const sk=n?p.s.filter(x=>st.needs.has(x)).length/n:0;
+const it=i?p.i.filter(x=>st.ints.has(x)).length/i:0;
+const av=st.avail.size?(p.a.some(x=>st.avail.has(x))?1:0):0;
+const w=(n?.6:0)+(i?.3:0)+(st.avail.size?.1:0);
+return w?Math.round((sk*.6+it*.3+av*.1)/w*100):null}
+function esc(t){return t.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(){
+const q=st.q.toLowerCase();
+let rows=S.map((p,k)=>({p,k,sc:score(p)})).filter(r=>!q||(r.p.n+r.p.m+r.p.s.join()).toLowerCase().includes(q));
+if(st.avail.size)rows=rows.filter(r=>r.p.a.some(x=>st.avail.has(x)));
+rows.sort((a,b)=>(b.sc??-1)-(a.sc??-1));
+const L=document.getElementById("list");
+L.innerHTML=rows.length?rows.map(({p,k,sc})=>{
+const inv=st.team.has(k);
+return `<div class="card"><div class="av" style="background:${COL[k%6]}">${p.n.split(" ").map(w=>w[0]).join("")}</div>
+<div><div class="name">${esc(p.n)}</div><div class="meta">${esc(p.m)} · ${p.a.join(", ")}</div>
+<div class="row">${p.s.map(x=>`<span class="tag ${st.needs.has(x)?"m":""}">${x}</span>`).join("")}</div>
+<div class="row">${p.i.map(x=>`<span class="tag ${st.ints.has(x)?"m":""}">♥ ${x}</span>`).join("")}</div>
+<button class="btn ${inv?"d":""}" data-k="${k}">${inv?"✓ Invited":"Invite to team"}</button></div>
+<div class="score">${sc===null?"":`<b>${sc}%</b><small>match</small>`}</div></div>`}).join(""):'<p class="empty">No students match. Try removing a filter.</p>';
+L.querySelectorAll("button[data-k]").forEach(b=>b.onclick=()=>toggle(+b.dataset.k));
+document.getElementById("cnt").textContent=st.team.size;
+const T=document.getElementById("team");
+T.innerHTML=st.team.size?[...st.team].map(k=>`<div class="team"><span>${esc(S[k].n)}</span><button data-r="${k}" aria-label="Remove">×</button></div>`).join(""):'<p class="empty">Invite students to build your team.</p>';
+T.querySelectorAll("button[data-r]").forEach(b=>b.onclick=()=>toggle(+b.dataset.r));
+}
+function toggle(k){if(st.team.has(k))st.team.delete(k);else if(st.team.size<4)st.team.add(k);else alert("Teams are limited to 4 in this prototype.");render()}
+document.getElementById("q").oninput=e=>{st.q=e.target.value;render()};
+chips("needs",SKILLS,st.needs);chips("ints",INTERESTS,st.ints);chips("avail",AVAIL,st.avail);
+render();
+</script>
+</body>
+</html>
